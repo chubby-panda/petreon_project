@@ -1,0 +1,16 @@
+{
+    "title": "Poppy needs a kidney!",
+    "pet_name": "Poppy",
+    "description": "Poppy needs a kidney, please help.",
+    "goal": 10000,
+    "active": true,
+    "owner": "Sophie Phoon",
+    "category": "Dogs"
+}
+
+{
+    "pet_id": 1,
+    "amount": 200,
+    "anonymous": false,
+    "supporter": "Generous Person"
+}
