@@ -2,8 +2,8 @@
     "title": "Poppy needs a kidney!",
     "pet_name": "Poppy",
     "description": "Poppy needs a kidney, please help.",
+    "med_treatment": "kidney transplant",
     "goal": 10000,
-    "owner": "Sophie Phoon",
     "category": "Dogs"
 }
 

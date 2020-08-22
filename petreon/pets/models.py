@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
 
 """This is the Pet model (project for each pet surgery). After defining it here, we make migrations, migrate and then create a serializer to handle it."""
@@ -10,11 +11,15 @@ class Pet(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     goal = models.IntegerField()
     active = models.BooleanField(default=True)
-    owner = models.CharField(max_length=100)
+    owner = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name='owner_pets'
+    )
     category = models.CharField(max_length=100)
 
 
-"""This is the Pledge model. Note: we don't want the pet owner to be able to update pledges to their pet."""
+"""This is the Pledge model."""
 class Pledge(models.Model):
     pet = models.ForeignKey(
         'Pet',
@@ -23,4 +28,8 @@ class Pledge(models.Model):
     )
     amount = models.IntegerField()
     anonymous = models.BooleanField(default=False)
-    supporter = models.CharField(max_length=100)
+    supporter = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name='pledges'
+    )

@@ -31,7 +31,8 @@ class PetSerializer(serializers.Serializer):
     date_created = serializers.DateTimeField(read_only=True)
     goal = serializers.IntegerField()
     active = serializers.BooleanField(default=True)
-    owner = serializers.CharField(max_length=100)
+    # Changed this from a CharField to ReadOnlyField so that we can pass it the username of the logged in user
+    owner = serializers.ReadOnlyField(source='owner.username')
     category = serializers.CharField(max_length=100)
 
     # Added this meta class because of: https://www.django-rest-framework.org/api-guide/fields/#date-and-time-fields
