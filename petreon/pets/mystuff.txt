@@ -3,7 +3,6 @@
     "pet_name": "Poppy",
     "description": "Poppy needs a kidney, please help.",
     "goal": 10000,
-    "active": true,
     "owner": "Sophie Phoon",
     "category": "Dogs"
 }
