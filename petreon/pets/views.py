@@ -1,13 +1,18 @@
 from django.http import Http404
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Pet, Pledge
-from .serializers import PetSerializer, PledgeSerializer, PetDetailSerializer
+from .models import Pet, Pledge, Category
+from .serializers import PetSerializer, PledgeSerializer, PetDetailSerializer, CategorySerializer
+from .permissions import IsOwnerOrReadOnly
 
 
 class PetList(APIView):
+    # This means if I'm logged in, I have permissions. If I'm not, then it will be read-only.
+    permission_classes = [
+        permissions.IsAuthenticatedOrReadOnly,
+        ]
 
     # This is the GET method, this passes the pets objects to the serializer and returns them as a response. 
     def get(self, request):
@@ -31,6 +36,10 @@ class PetList(APIView):
 
 
 class PetDetail(APIView):
+    permission_classes = [
+        permissions.IsAuthenticatedOrReadOnly, 
+        IsOwnerOrReadOnly
+        ]
 
     # This is our GET_OBJECT method we created - it returns an object by pk
     def get_object(self, pk):
@@ -69,6 +78,7 @@ class PetDetail(APIView):
 
 class PledgeList(APIView):
 
+
     # GET
     def get(self, request):
         pledges = Pledge.objects.all()
@@ -91,6 +101,7 @@ class PledgeList(APIView):
 
 
 class PledgeDetail(APIView):
+
 
     def get_object(self, pk):
         try:
@@ -124,3 +135,12 @@ class PledgeDetail(APIView):
         pledge = self.get_object(pk)
         pledge.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# This is the CategoryList view that will show a list of all the categories available (those with admin privileges will be able to create/update/delete categories)
+class CategoryList(APIView):
+    
+    def get(self, request):
+        categories = Category.objects.all()
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data)

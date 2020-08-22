@@ -1,6 +1,11 @@
 from rest_framework import serializers
 
-from .models import Pet, Pledge
+from .models import Pet, Pledge, Category
+
+# NEW: adding a category serializer that will handle the data connected to the category model 
+class CategorySerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    category = serializers.CharField(max_length=100)
 
 
 class PledgeSerializer(serializers.Serializer):
