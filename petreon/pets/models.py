@@ -3,10 +3,12 @@ from django.contrib.auth import get_user_model
 
 
 
-# NEW: This is the Category model. We want the Pet model to be able to select one of the category objects from a ChoiceField.
+# # NEW: This is the Category model. We want the Pet model to be able to select one of the category objects from a ChoiceField.
 class Category(models.Model):
     category = models.CharField(max_length=100)
 
+    def get_queryset(self):
+        return Category.objects.all()
 
 
 # This is the Pet model (project for each pet surgery). After defining it here, we make migrations, migrate and then create a serializer to handle it.
@@ -23,7 +25,13 @@ class Pet(models.Model):
         on_delete=models.CASCADE,
         related_name='owner_pets'
     )
-    category = models.CharField(max_length=100)
+    pet_category = models.ForeignKey(
+        'Category',
+        related_name='pets',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+    )
 
 
 # This is the Pledge model.

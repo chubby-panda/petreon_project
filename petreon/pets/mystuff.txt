@@ -4,7 +4,7 @@
     "description": "Poppy needs a kidney, please help.",
     "med_treatment": "kidney transplant",
     "goal": 10000,
-    "category": "Dogs"
+    "pet_category": "dogs"
 }
 
 {
