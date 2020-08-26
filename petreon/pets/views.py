@@ -9,15 +9,18 @@ from .permissions import IsOwnerOrReadOnly
 
 
 class PetList(APIView):
+    # This means if I'm logged in, I have permissions. If I'm not, then it will be read-only.
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
         ]
 
+    # This is the GET method, this passes the pets objects to the serializer and returns them as a response. 
     def get(self, request):
         pets = Pet.objects.all()
         serializer = PetSerializer(pets, many=True)
         return Response(serializer.data)
 
+    # This is the POST method; this passes a pet object to the serializer, which saves it in the database as a new object.
     def post(self, request):
         serializer = PetSerializer(data=request.data)
         if serializer.is_valid():
@@ -33,17 +36,16 @@ class PetList(APIView):
 
 
 class PetDetail(APIView):
-    permission_classes = [
-        permissions.IsAuthenticatedOrReadOnly, 
-        IsOwnerOrReadOnly
-        ]
+    permission_classes = [IsOwnerOrReadOnly]
 
+    # This is our GET_OBJECT method we created - it returns an object by pk
     def get_object(self, pk):
         try:
             return Pet.objects.get(pk=pk)
         except Pet.DoesNotExist:
             raise Http404
     
+    # GET
     def get(self, request, pk):
         pet = self.get_object(pk)
         serializer = PetDetailSerializer(pet)
@@ -72,11 +74,13 @@ class PetDetail(APIView):
 class PledgeList(APIView):
 
 
+    # GET
     def get(self, request):
         pledges = Pledge.objects.all()
         serializer = PledgeSerializer(pledges, many=True)
         return Response(serializer.data)
 
+    # POST (create)
     def post(self, request):
         serializer = PledgeSerializer(data=request.data)
         if serializer.is_valid():
@@ -100,11 +104,13 @@ class PledgeDetail(APIView):
         except Pledge.DoesNotExist:
             raise Http404
 
+    # GET
     def get(self, request, pk):
         pledge = self.get_object(pk)
         serializer = PledgeSerializer(pledge)
         return Response(serializer.data)
 
+    # PUT (update)
     def put(self, request, pk):
         pledge = self.get_object(pk)
         serializer = PledgeSerializer(pledge, data=request.data, partial=True)
@@ -119,14 +125,18 @@ class PledgeDetail(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    # DELETE
     def delete(self, request, pk):
         pledge = self.get_object(pk)
         pledge.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
+# This is the CategoryList view that will show a list of all the categories available (those with admin privileges will be able to create/update/delete categories)
 class CategoryList(APIView):
+    permission_classes = [
+        permissions.IsAuthenticatedOrReadOnly,
+        ]
     
     def get(self, request):
         categories = Category.objects.all()
@@ -138,9 +148,9 @@ class CategoryList(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(
-                serializer.data,
+                serializer.data, 
                 status=status.HTTP_201_CREATED
-            )
+                )
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST

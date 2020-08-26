@@ -2,16 +2,14 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 
-
-# # NEW: This is the Category model. We want the Pet model to be able to select one of the category objects from a ChoiceField.
 class Category(models.Model):
     category = models.CharField(max_length=100)
 
-    def get_queryset(self):
-        return Category.objects.all()
+
+def get_generic_category():
+    return Category.objects.get_or_create(category='pet')[0]
 
 
-# This is the Pet model (project for each pet surgery). After defining it here, we make migrations, migrate and then create a serializer to handle it.
 class Pet(models.Model):
     title = models.CharField(max_length=100)
     pet_name = models.CharField(max_length=100)
@@ -26,15 +24,12 @@ class Pet(models.Model):
         related_name='owner_pets'
     )
     pet_category = models.ForeignKey(
-        'Category',
-        related_name='pets',
-        blank=True,
-        null=True,
-        on_delete=models.CASCADE
+        Category,
+        on_delete=models.SET(get_generic_category), 
+        related_name='pets'
     )
 
 
-# This is the Pledge model.
 class Pledge(models.Model):
     pet = models.ForeignKey(
         'Pet',
@@ -48,4 +43,3 @@ class Pledge(models.Model):
         on_delete=models.CASCADE,
         related_name='pledges'
     )
-

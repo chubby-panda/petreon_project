@@ -3,8 +3,6 @@ from rest_framework import serializers
 from .models import Pet, Pledge, Category
 
 
-
-
 class CategorySerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     category = serializers.CharField(max_length=100)
@@ -12,6 +10,10 @@ class CategorySerializer(serializers.Serializer):
     def create(self, validated_data):
         return Category.objects.create(**validated_data)
 
+    def update(self, instance, validated_data):
+        instance.category = validated_data.get('category', instance.category)
+        instance.save()
+        return instance
 
 
 class PledgeSerializer(serializers.Serializer):
@@ -32,7 +34,6 @@ class PledgeSerializer(serializers.Serializer):
         return instance
         
 
-
 class PetSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     title = serializers.CharField(max_length=100)
@@ -43,8 +44,8 @@ class PetSerializer(serializers.Serializer):
     goal = serializers.IntegerField()
     active = serializers.BooleanField(default=True)
     owner = serializers.ReadOnlyField(source='owner.username')
-    # NEW
-    pet_category = serializers.SlugRelatedField(read_only=False, slug_field='category', queryset=)
+    pet_category = serializers.SlugRelatedField(slug_field='category', queryset=Category.objects.all())
+
 
     # Added this meta class because of: https://www.django-rest-framework.org/api-guide/fields/#date-and-time-fields
     class Meta:
@@ -65,6 +66,6 @@ class PetSerializer(serializers.Serializer):
         return instance
 
 
-
 class PetDetailSerializer(PetSerializer):
     pledges = PledgeSerializer(many=True, read_only=True)
+
