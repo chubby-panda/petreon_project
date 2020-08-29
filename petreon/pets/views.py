@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from .models import Pet, Pledge, Category
 from .serializers import PetSerializer, PledgeSerializer, PetDetailSerializer, CategorySerializer
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsNotOwnerOrReadOnly
 
 # def get_choice_set(model):
 #     pet_tuple = []
@@ -37,18 +37,17 @@ class PetList(generics.ListAPIView):
         ]
     # filter_backends = [filters.DjangoFilterBackend]
     # filter_class = PetFilter
-    filterset_fields = ['pet_category', 'goal']
+    filterset_fields = ['pet_category',]
 
     def get_queryset(self):
         queryset = Pet.objects.all()
-        pet_c = self.request.query_params.get('pet_category', None)
-        if pet_c is not None:
-            print(pet_c)
-            queryset = queryset.filter(pet_category=pet_c)
+        category = self.request.query_params.get('pet_category', None)
+        if category is not None:
+            queryset = queryset.filter(pet_category__category=category)
         return queryset
 
     def get(self, request):
-        pets = Pet.objects.all()
+        pets = self.get_queryset()
         serializer = PetSerializer(pets, many=True)
         return Response(serializer.data)
 
@@ -103,6 +102,8 @@ class PetDetail(APIView):
 
 
 class PledgeList(APIView):
+
+    permission_classes = [IsNotOwnerOrReadOnly]
 
     def get(self, request):
         pledges = Pledge.objects.all()
@@ -181,3 +182,10 @@ class CategoryList(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class CategoryDetail(APIView):
+    def get(self, request):
+        categories = Category.objects.all()
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data)

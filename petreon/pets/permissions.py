@@ -8,7 +8,11 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # Safe methods, e.g. GET
         if request.method in permissions.SAFE_METHODS:
             return True
-        print('object', obj)
-        print('user', request.user)
         return obj.owner == request.user
 
+class IsNotOwnerOrReadOnly(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return obj.pet.owner != request.user

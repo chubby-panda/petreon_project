@@ -18,10 +18,10 @@ class CategorySerializer(serializers.Serializer):
 
 class PledgeSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
-    pet_id = serializers.IntegerField()
+    pet = serializers.IntegerField()
     amount = serializers.IntegerField()
     anonymous = serializers.BooleanField(default=False)
-    supporter = serializers.CharField(max_length=100)
+    supporter = serializers.ReadOnlyField(source='supporter.username')
 
     def create(self, validated_data):
         return Pledge.objects.create(**validated_data)
