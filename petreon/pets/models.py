@@ -5,6 +5,9 @@ from django.contrib.auth import get_user_model
 class Category(models.Model):
     category = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.category
+
 
 def get_generic_category():
     return Category.objects.get_or_create(category='pet')[0]
@@ -28,6 +31,9 @@ class Pet(models.Model):
         on_delete=models.SET(get_generic_category), 
         related_name='pets'
     )
+
+    class Meta:
+        ordering = ['-date_created',]
 
 
 class Pledge(models.Model):

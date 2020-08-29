@@ -1,26 +1,57 @@
 from django.http import Http404
+from django.db.models import Prefetch
+import django_filters
+from django_filters import rest_framework as filters
 from rest_framework import status, permissions
 from rest_framework.views import APIView
+from rest_framework import generics
 from rest_framework.response import Response
 
 from .models import Pet, Pledge, Category
 from .serializers import PetSerializer, PledgeSerializer, PetDetailSerializer, CategorySerializer
 from .permissions import IsOwnerOrReadOnly
 
+# def get_choice_set(model):
+#     pet_tuple = []
+#     for o in model.objects.all():
+#         p = o.pet_category
+#         pt = (p, p)
+#         pet_tuple.append(pt)
+#     pet_tuple = tuple(pet_tuple)
+#     print(pet_tuple)
+#     return pet_tuple
 
-class PetList(APIView):
-    # This means if I'm logged in, I have permissions. If I'm not, then it will be read-only.
+# class PetFilter(filters.FilterSet):
+#     pet_category = filters.ChoiceFilter(choices=get_choice_set(Pet))
+
+#     class Meta:
+#         model = Pet
+#         fields = ('pet_category', 'owner',)
+
+
+# Changed APIView to GenericAPIView (10:15)
+class PetList(generics.ListAPIView):
+    serializer_class = PetSerializer
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
         ]
+    # filter_backends = [filters.DjangoFilterBackend]
+    # filter_class = PetFilter
+    filterset_fields = ['pet_category', 'goal']
 
-    # This is the GET method, this passes the pets objects to the serializer and returns them as a response. 
+    def get_queryset(self):
+        queryset = Pet.objects.all()
+        pet_c = self.request.query_params.get('pet_category', None)
+        if pet_c is not None:
+            print(pet_c)
+            queryset = queryset.filter(pet_category=pet_c)
+        return queryset
+
     def get(self, request):
         pets = Pet.objects.all()
         serializer = PetSerializer(pets, many=True)
         return Response(serializer.data)
 
-    # This is the POST method; this passes a pet object to the serializer, which saves it in the database as a new object.
     def post(self, request):
         serializer = PetSerializer(data=request.data)
         if serializer.is_valid():
@@ -38,14 +69,14 @@ class PetList(APIView):
 class PetDetail(APIView):
     permission_classes = [IsOwnerOrReadOnly]
 
-    # This is our GET_OBJECT method we created - it returns an object by pk
     def get_object(self, pk):
         try:
-            return Pet.objects.get(pk=pk)
+            pet = Pet.objects.get(pk=pk)
+            self.check_object_permissions(self.request, pet)
+            return pet
         except Pet.DoesNotExist:
             raise Http404
     
-    # GET
     def get(self, request, pk):
         pet = self.get_object(pk)
         serializer = PetDetailSerializer(pet)
@@ -73,14 +104,11 @@ class PetDetail(APIView):
 
 class PledgeList(APIView):
 
-
-    # GET
     def get(self, request):
         pledges = Pledge.objects.all()
         serializer = PledgeSerializer(pledges, many=True)
         return Response(serializer.data)
 
-    # POST (create)
     def post(self, request):
         serializer = PledgeSerializer(data=request.data)
         if serializer.is_valid():
@@ -100,17 +128,17 @@ class PledgeDetail(APIView):
 
     def get_object(self, pk):
         try:
-            return Pledge.objects.get(pk=pk)
+            pledge = Pledge.objects.get(pk=pk)
+            self.check_object_permissions(self.request, pledge)
+            return pledge
         except Pledge.DoesNotExist:
             raise Http404
 
-    # GET
     def get(self, request, pk):
         pledge = self.get_object(pk)
         serializer = PledgeSerializer(pledge)
         return Response(serializer.data)
 
-    # PUT (update)
     def put(self, request, pk):
         pledge = self.get_object(pk)
         serializer = PledgeSerializer(pledge, data=request.data, partial=True)
@@ -125,14 +153,12 @@ class PledgeDetail(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # DELETE
     def delete(self, request, pk):
         pledge = self.get_object(pk)
         pledge.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# This is the CategoryList view that will show a list of all the categories available (those with admin privileges will be able to create/update/delete categories)
 class CategoryList(APIView):
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,

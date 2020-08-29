@@ -13,7 +13,7 @@ from .permissions import IsUserOrReadOnly
 class CustomUserCreate(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = ()
 
 
 # List of all users
