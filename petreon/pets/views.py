@@ -9,38 +9,21 @@ from rest_framework.response import Response
 
 from .models import Pet, Pledge, Category
 from .serializers import PetSerializer, PledgeSerializer, PetDetailSerializer, CategorySerializer
-from .permissions import IsOwnerOrReadOnly, IsNotOwnerOrReadOnly
-
-# def get_choice_set(model):
-#     pet_tuple = []
-#     for o in model.objects.all():
-#         p = o.pet_category
-#         pt = (p, p)
-#         pet_tuple.append(pt)
-#     pet_tuple = tuple(pet_tuple)
-#     print(pet_tuple)
-#     return pet_tuple
-
-# class PetFilter(filters.FilterSet):
-#     pet_category = filters.ChoiceFilter(choices=get_choice_set(Pet))
-
-#     class Meta:
-#         model = Pet
-#         fields = ('pet_category', 'owner',)
+from .permissions import IsOwnerOrReadOnly, IsNotOwnerOrReadOnly, IsSupporterOrReadOnly, IsSuperUser, IsSuperUserOrReadOnly
 
 
-# Changed APIView to GenericAPIView (10:15)
 class PetList(generics.ListAPIView):
+    """
+    View for pet list endpoint.
+    """
     serializer_class = PetSerializer
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
         ]
-    # filter_backends = [filters.DjangoFilterBackend]
-    # filter_class = PetFilter
     filterset_fields = ['pet_category',]
 
     def get_queryset(self):
-        queryset = Pet.objects.all()
+        queryset = Pet.objects.all().filter(active=True)
         category = self.request.query_params.get('pet_category', None)
         if category is not None:
             queryset = queryset.filter(pet_category__category=category)
@@ -66,23 +49,26 @@ class PetList(generics.ListAPIView):
 
 
 class PetDetail(APIView):
+    """
+    View for pet detail endpoint (view one pet).
+    """
     permission_classes = [IsOwnerOrReadOnly]
 
-    def get_object(self, pk):
+    def get_object(self, pet_pk):
         try:
-            pet = Pet.objects.get(pk=pk)
+            pet = Pet.objects.get(pk=pet_pk)
             self.check_object_permissions(self.request, pet)
             return pet
         except Pet.DoesNotExist:
             raise Http404
     
-    def get(self, request, pk):
-        pet = self.get_object(pk)
+    def get(self, request, pet_pk):
+        pet = self.get_object(pet_pk)
         serializer = PetDetailSerializer(pet)
         return Response(serializer.data)
 
-    def put(self, request, pk):
-        pet = self.get_object(pk)
+    def put(self, request, pet_pk):
+        pet = self.get_object(pet_pk)
         serializer = PetSerializer(pet, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -95,25 +81,35 @@ class PetDetail(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    def delete(self, request, pk):
-        pet = self.get_object(pk)
+    def delete(self, request, pet_pk):
+        pet = self.get_object(pet_pk)
         pet.delete()
         return Response(status=status.HTTP_204_NO_CONTENT) 
 
 
-class PledgeList(APIView):
-
+class PetPledgeList(APIView):
+    """
+    View for pledge list endpoint (of specific pet).
+    """
     permission_classes = [IsNotOwnerOrReadOnly]
 
-    def get(self, request):
-        pledges = Pledge.objects.all()
+    def get_object(self, pet_pk):
+        try:
+            pet = Pet.objects.get(pk=pet_pk)
+            self.check_object_permissions(self.request, pet)
+            return pet
+        except Pet.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pet_pk):
+        pledges = Pledge.objects.all().filter(pet=self.get_object(pet_pk))
         serializer = PledgeSerializer(pledges, many=True)
         return Response(serializer.data)
 
-    def post(self, request):
+    def post(self, request, pet_pk):
         serializer = PledgeSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(supporter=request.user, pet=self.get_object(pet_pk))
             return Response(
                 serializer.data, 
                 status=status.HTTP_201_CREATED
@@ -125,23 +121,27 @@ class PledgeList(APIView):
 
 
 class PledgeDetail(APIView):
+    """
+    View for pledge detail endpoint.
+    """
 
+    permission_classes = [IsSupporterOrReadOnly,]
 
-    def get_object(self, pk):
+    def get_object(self, pledge_pk):
         try:
-            pledge = Pledge.objects.get(pk=pk)
+            pledge = Pledge.objects.get(pk=pledge_pk)
             self.check_object_permissions(self.request, pledge)
             return pledge
         except Pledge.DoesNotExist:
             raise Http404
 
-    def get(self, request, pk):
-        pledge = self.get_object(pk)
+    def get(self, request, pet_pk, pledge_pk):
+        pledge = self.get_object(pledge_pk)
         serializer = PledgeSerializer(pledge)
         return Response(serializer.data)
 
-    def put(self, request, pk):
-        pledge = self.get_object(pk)
+    def put(self, request, pet_pk, pledge_pk):
+        pledge = self.get_object(pledge_pk)
         serializer = PledgeSerializer(pledge, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -154,16 +154,19 @@ class PledgeDetail(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    def delete(self, request, pk):
-        pledge = self.get_object(pk)
+    def delete(self, request, pet_pk, pledge_pk):
+        pledge = self.get_object(pledge_pk)
         pledge.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+        
 
 
 class CategoryList(APIView):
-    permission_classes = [
-        permissions.IsAuthenticatedOrReadOnly,
-        ]
+    """
+    View for category list endpoint (all categories).
+    """
+
+    permission_classes = [IsSuperUserOrReadOnly]
     
     def get(self, request):
         categories = Category.objects.all()
@@ -185,7 +188,41 @@ class CategoryList(APIView):
 
 
 class CategoryDetail(APIView):
-    def get(self, request):
-        categories = Category.objects.all()
-        serializer = CategorySerializer(categories, many=True)
+    """
+    View for category detail endpoint
+    """
+
+    permission_classes = [IsSuperUser]
+
+    def get_object(self, pk):
+        try:
+            category = Category.objects.get(pk=pk)
+            self.check_object_permissions(self.request, category)
+            return category
+        except Category.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        category = self.get_object(pk)
+        serializer = CategorySerializer(category)
         return Response(serializer.data)
+
+    def put(self, request, pk):
+        category = self.get_object(pk)
+        serializer = CategorySerializer(category, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def delete(self, request, pk):
+        category = self.get_object(pk)
+        category.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT) 
+

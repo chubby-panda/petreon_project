@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save
 
 
 class Category(models.Model):
@@ -7,6 +8,9 @@ class Category(models.Model):
 
     def __str__(self):
         return self.category
+
+    class Meta:
+        verbose_name_plural = "categories"
 
 
 def get_generic_category():
@@ -20,6 +24,8 @@ class Pet(models.Model):
     med_treatment = models.CharField(max_length=100, verbose_name="medical treatment")
     date_created = models.DateTimeField(auto_now_add=True)
     goal = models.IntegerField()
+    pledged_amount = models.IntegerField(default=0)
+    goal_reached = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
     owner = models.ForeignKey(
         get_user_model(),
@@ -35,6 +41,9 @@ class Pet(models.Model):
     class Meta:
         ordering = ['-date_created',]
 
+    def __str__(self):
+        return self.title
+
 
 class Pledge(models.Model):
     pet = models.ForeignKey(
@@ -49,3 +58,16 @@ class Pledge(models.Model):
         on_delete=models.CASCADE,
         related_name='pledges'
     )
+
+    def __str__(self):
+        return str(self.supporter)
+
+def get_total_pledge(sender, instance, **kwargs):
+    if kwargs:
+        p = instance.pet
+        p.pledged_amount += instance.amount
+        if p.pledged_amount >= p.goal:
+            p.goal_reached = True
+        p.save()
+
+post_save.connect(get_total_pledge, sender=Pledge)

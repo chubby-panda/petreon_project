@@ -18,7 +18,7 @@ class CategorySerializer(serializers.Serializer):
 
 class PledgeSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
-    pet = serializers.IntegerField()
+    pet = serializers.ReadOnlyField(source='pet.id')
     amount = serializers.IntegerField()
     anonymous = serializers.BooleanField(default=False)
     supporter = serializers.ReadOnlyField(source='supporter.username')
@@ -42,6 +42,8 @@ class PetSerializer(serializers.Serializer):
     med_treatment = serializers.CharField()
     date_created = serializers.DateTimeField(read_only=True)
     goal = serializers.IntegerField()
+    pledged_amount = serializers.SerializerMethodField()
+    goal_reached = serializers.BooleanField(default=False)
     active = serializers.BooleanField(default=True)
     owner = serializers.ReadOnlyField(source='owner.username')
     pet_category = serializers.SlugRelatedField(slug_field='category', queryset=Category.objects.all())
@@ -50,6 +52,18 @@ class PetSerializer(serializers.Serializer):
     # Added this meta class because of: https://www.django-rest-framework.org/api-guide/fields/#date-and-time-fields
     class Meta:
         model = Pet
+
+    def get_pledged_amount(self, obj):
+        pledged = 0
+        for pledge in obj.pledges.all():
+            pledged += pledge.amount
+        return pledged
+
+    def get_goal_reached(self, obj):
+        if obj.goal < obj.pledged_amount:
+            return False
+        else:
+            return True
 
     def create(self, validated_data):
         return Pet.objects.create(**validated_data)
