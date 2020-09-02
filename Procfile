@@ -1,0 +1,1 @@
+web: gunicorn --pythonpath petreon petreon.wsgi --log-file -
