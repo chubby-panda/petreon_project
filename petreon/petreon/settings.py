@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django_filters',
     'pets.apps.PetsConfig',
     'users.apps.UsersConfig',
+    'notifications.apps.NotificationsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

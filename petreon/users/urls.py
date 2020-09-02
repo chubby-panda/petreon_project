@@ -8,7 +8,7 @@ urlpatterns = [
     path('users/register/', views.CustomUserCreate.as_view()), # Register
     path('users/account/<int:pk>/', views.CustomUserDetail.as_view()), # View account
     path('users/profile/<int:pk>/', views.UserProfileDetail.as_view()), # View profile
-    path('users/account/<int:pk>/change-password', views.ChangePasswordView.as_view()), # Change password
+    path('users/account/<int:pk>/change-password/', views.ChangePasswordView.as_view()), # Change password
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

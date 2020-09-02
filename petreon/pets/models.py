@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 
+from notifications.models import Notification
+
 
 class Category(models.Model):
     """
@@ -74,15 +76,44 @@ class Pledge(models.Model):
     def __str__(self):
         return str(self.supporter)
 
+
+def get_pledge_update(sender, instance, **kwargs):
+    """
+    Signal to send notification when pledge object is created/updated.
+    """
+    s = instance.supporter
+    if instance.anonymous:
+        s = "An anonymous supporter"
+    if kwargs['created']:
+        Notification.objects.create(
+            title=f"Your pet {instance.pet.pet_name} has received a pledge.",
+            body=f"{s} has pledged ${instance.amount} to your pet, {instance.pet.pet_name}.",
+            recipient=instance.pet.owner
+            )
+    elif kwargs['created'] is False:
+        Notification.objects.create(
+            title=f"{s} updated their pledge for {instance.pet.pet_name}.",
+            body=f"{s} has changed their original pledge for {instance.pet.pet_name}'s treatment to ${instance.amount}.",
+            recipient=instance.pet.owner
+        )
+
+post_save.connect(get_pledge_update, sender=Pledge)
+
+
 def get_total_pledge(sender, instance, **kwargs):
     """
-    Signal to change pet pledged amount when pledge object is created/put/deleted
+    Signal to change pet values when pledge object is created/put/deleted
     """
     if kwargs:
-        p = instance.pet
-        p.pledged_amount += instance.amount
-        if p.pledged_amount >= p.goal:
-            p.goal_reached = True
-        p.save()
+        instance.pet.pledged_amount += instance.amount
+        if instance.pet.pledged_amount >= instance.pet.goal:
+            instance.pet.goal_reached = True
+            Notification.objects.create(
+                title=f"Goal reached!",
+                body=f"Congratulations! {instance.pet.pet_name}'s treatment has been fully funded.",
+                recipient=instance.pet.owner
+            )
+            instance.pet.active = False
+        instance.pet.save()
 
 post_save.connect(get_total_pledge, sender=Pledge)

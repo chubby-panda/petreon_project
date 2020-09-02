@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from .models import CustomUser, UserProfile
 
 
@@ -10,15 +11,6 @@ class UserProfileSerializer(serializers.Serializer):
     profile_img = serializers.ImageField(allow_empty_file=True, use_url=True)
     fun_fact = serializers.CharField(max_length=200)
     user = serializers.ReadOnlyField(source='user.username')
-
-    # class Meta:
-    #     model = UserProfile
-    #     fields = ('id', 'profile_img', 'fun_fact', 'user')
-
-    # def get_profile_img(self, profile):
-    #     request = self.context.get('request')
-    #     profile_img = profile.profile_img.url
-    #     return request.build_absolute_url(profile_img)
 
     def update(self, instance, validated_data):
         instance.profile_img = validated_data.get('profile_img', instance.profile_img)
