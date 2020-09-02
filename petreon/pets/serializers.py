@@ -4,6 +4,9 @@ from .models import Pet, Pledge, Category
 
 
 class CategorySerializer(serializers.Serializer):
+    """
+    Serializer for category model.
+    """
     id = serializers.ReadOnlyField()
     category = serializers.CharField(max_length=100)
 
@@ -17,6 +20,9 @@ class CategorySerializer(serializers.Serializer):
 
 
 class PledgeSerializer(serializers.Serializer):
+    """
+    Serializer for pledge model.
+    """
     id = serializers.ReadOnlyField()
     pet = serializers.ReadOnlyField(source='pet.id')
     amount = serializers.IntegerField()
@@ -35,6 +41,9 @@ class PledgeSerializer(serializers.Serializer):
         
 
 class PetSerializer(serializers.Serializer):
+    """
+    Serializer for pet model (without pledges).
+    """
     id = serializers.ReadOnlyField()
     title = serializers.CharField(max_length=100)
     pet_name = serializers.CharField(max_length=100)
@@ -81,5 +90,8 @@ class PetSerializer(serializers.Serializer):
 
 
 class PetDetailSerializer(PetSerializer):
+    """
+    Serializer for pet model (with pledges).
+    """
     pledges = PledgeSerializer(many=True, read_only=True)
 

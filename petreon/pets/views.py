@@ -64,7 +64,7 @@ class PetDetail(APIView):
     
     def get(self, request, pet_pk):
         pet = self.get_object(pet_pk)
-        serializer = PetDetailSerializer(pet)
+        serializer = PetSerializer(pet)
         return Response(serializer.data)
 
     def put(self, request, pet_pk):

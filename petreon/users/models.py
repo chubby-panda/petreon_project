@@ -34,6 +34,9 @@ class UserProfile(models.Model):
         return self.user.username
 
 def create_user_profile(sender, instance, **kwargs):
+    """
+    Signal to create profile object when user object is created
+    """
     if kwargs['created']:
         user_profile = UserProfile.objects.create(user=instance)
 

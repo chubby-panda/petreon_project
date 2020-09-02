@@ -2,7 +2,9 @@ from rest_framework import permissions
 
 
 class IsUserOrReadOnly(permissions.BasePermission):
-
+    """
+    For use with profile/user/password change views.
+    """
     def has_object_permission(self, request, view, obj):
         print(request.method)
         # Safe methods, e.g. GET
@@ -14,6 +16,9 @@ class IsUserOrReadOnly(permissions.BasePermission):
 
 
 class IsSuperUserOrReadOnly(permissions.IsAdminUser):
+    """
+    For use with admin-level change views.
+    """
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -21,6 +26,9 @@ class IsSuperUserOrReadOnly(permissions.IsAdminUser):
 
 
 class IsSuperUser(permissions.IsAdminUser):
+    """
+    For use with admin-level access views.
+    """
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_superuser)
 

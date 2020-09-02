@@ -4,6 +4,9 @@ from django.db.models.signals import post_save
 
 
 class Category(models.Model):
+    """
+    Model for category.
+    """
     category = models.CharField(max_length=100)
 
     def __str__(self):
@@ -14,10 +17,16 @@ class Category(models.Model):
 
 
 def get_generic_category():
+    """
+    Set a generic category if a category object is deleted.
+    """
     return Category.objects.get_or_create(category='pet')[0]
 
 
 class Pet(models.Model):
+    """
+    Model for pets/projects.
+    """
     title = models.CharField(max_length=100)
     pet_name = models.CharField(max_length=100)
     description = models.TextField()
@@ -46,6 +55,9 @@ class Pet(models.Model):
 
 
 class Pledge(models.Model):
+    """
+    Model for pledges.
+    """
     pet = models.ForeignKey(
         'Pet',
         on_delete=models.CASCADE,
@@ -63,6 +75,9 @@ class Pledge(models.Model):
         return str(self.supporter)
 
 def get_total_pledge(sender, instance, **kwargs):
+    """
+    Signal to change pet pledged amount when pledge object is created/put/deleted
+    """
     if kwargs:
         p = instance.pet
         p.pledged_amount += instance.amount

@@ -2,7 +2,9 @@ from rest_framework import permissions
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
-
+    """
+    For use with pet model change views.
+    """
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -10,7 +12,9 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 
 class IsNotOwnerOrReadOnly(permissions.BasePermission):
-
+    """
+    For use with pledge model create views.
+    """
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -18,7 +22,9 @@ class IsNotOwnerOrReadOnly(permissions.BasePermission):
 
 
 class IsSupporterOrReadOnly(permissions.BasePermission):
-
+    """
+    For use with pledge model update views.
+    """
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -26,6 +32,9 @@ class IsSupporterOrReadOnly(permissions.BasePermission):
 
 
 class IsSuperUserOrReadOnly(permissions.IsAdminUser):
+    """
+    For use with admin-level change views.
+    """
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -33,5 +42,8 @@ class IsSuperUserOrReadOnly(permissions.IsAdminUser):
 
 
 class IsSuperUser(permissions.IsAdminUser):
+    """
+    For use with admin-level access views.
+    """
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_superuser)

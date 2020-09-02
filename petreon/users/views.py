@@ -121,6 +121,7 @@ class UserProfileDetail(APIView):
     View for profile detail endpoint.
     """
 
+    permission_classes = [IsUserOrReadOnly]
     parser_classes = [MultiPartParser]
 
     def get_object(self, pk):
