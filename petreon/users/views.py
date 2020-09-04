@@ -121,8 +121,9 @@ class UserProfileDetail(APIView):
     View for profile detail endpoint.
     """
 
-    permission_classes = [IsUserOrReadOnly]
-    parser_classes = [MultiPartParser]
+    permission_classes = [IsUserOrReadOnly,]
+    parser_classes = [MultiPartParser,]
+    serializer_class = UserProfileSerializer
 
     def get_object(self, pk):
         try:
@@ -150,3 +151,8 @@ class UserProfileDetail(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    def delete(self, request, pk):
+        profile = self.get_object(pk)
+        profile.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT) 

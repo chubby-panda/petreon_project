@@ -31,6 +31,7 @@ class Pet(models.Model):
     """
     title = models.CharField(max_length=100)
     pet_name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='media/', default='media/default.jpg')
     description = models.TextField()
     med_treatment = models.CharField(max_length=100, verbose_name="medical treatment")
     date_created = models.DateTimeField(auto_now_add=True)
@@ -54,6 +55,21 @@ class Pet(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class PetImage(models.Model):
+    """
+    Model for pet images. Separate model created so that multiple images can be uploaded for each pet instance. 
+    """
+    image = models.ImageField(upload_to='images/', max_length=254)
+    pet = models.ForeignKey(
+        Pet,
+        on_delete=models.CASCADE,
+        related_name='images'
+    )
+
+    def __str__(self):
+        return self.image.name
 
 
 class Pledge(models.Model):

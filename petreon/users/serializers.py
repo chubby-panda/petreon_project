@@ -12,6 +12,9 @@ class UserProfileSerializer(serializers.Serializer):
     fun_fact = serializers.CharField(max_length=200)
     user = serializers.ReadOnlyField(source='user.username')
 
+    def create(self, validated_data):
+        return UserProfile.objects.create(**validated_data)
+
     def update(self, instance, validated_data):
         instance.profile_img = validated_data.get('profile_img', instance.profile_img)
         instance.fun_fact = validated_data.get('fun_fact', instance.fun_fact)

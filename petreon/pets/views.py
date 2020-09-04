@@ -6,8 +6,11 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser
+from rest_framework.renderers import JSONRenderer
+import io
 
-from .models import Pet, Pledge, Category
+from .models import Pet, Pledge, Category, PetImage
 from .serializers import PetSerializer, PledgeSerializer, PetDetailSerializer, CategorySerializer
 from .permissions import IsOwnerOrReadOnly, IsNotOwnerOrReadOnly, IsSupporterOrReadOnly, IsSuperUser, IsSuperUserOrReadOnly
 
@@ -16,6 +19,7 @@ class PetList(generics.ListAPIView):
     """
     View for pet list endpoint.
     """
+    parser_classes = (MultiPartParser,)
     serializer_class = PetSerializer
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
@@ -35,7 +39,9 @@ class PetList(generics.ListAPIView):
         return Response(serializer.data)
 
     def post(self, request):
+
         serializer = PetSerializer(data=request.data)
+
         if serializer.is_valid():
             serializer.save(owner=request.user)
             return Response(

@@ -1,6 +1,7 @@
 from rest_framework import serializers
+from django.utils.translation import ugettext as _
 
-from .models import Pet, Pledge, Category
+from .models import Pet, Pledge, Category, PetImage
 
 
 class CategorySerializer(serializers.Serializer):
@@ -38,29 +39,70 @@ class PledgeSerializer(serializers.Serializer):
         instance.supporter = validated_data.get('supporter', instance.supporter)
         instance.save()
         return instance
-        
 
-class PetSerializer(serializers.Serializer):
+
+class ConstrainedImageField(serializers.ImageField):
+    """
+    ImageField with additional constraints (size)
+    """
+    MAX_SIZE = 2000000  # in Bytes
+    default_error_messages = {
+        'image_size': _('The size of the image is {image_size} KB. The maximum size allowed is: {max_size} KB.'),
+    }
+
+    def to_internal_value(self, data):
+        super(ConstrainedImageField, self).to_internal_value(data=data)
+        file_size = data.size
+        if file_size > self.MAX_SIZE:
+            max_size_kb = self.MAX_SIZE/1000
+            file_size_kb = file_size/1000
+            self.fail('image_size', max_size=max_size_kb, image_size=file_size_kb)
+
+
+class PetImageSerializer(serializers.ModelSerializer):
+    """
+    Serializer for pet image model (included in PetSerializer)
+    """
+    image = ConstrainedImageField(max_length=254, use_url=True, allow_empty_file=False)
+
+    class Meta:
+        model = PetImage
+        fields = "__all__"
+
+    def validate(self, data):
+        # get the image data from request.FILES:
+        self.context["image"] = self.context['request'].FILES.get("image")
+        return data
+
+    def create(self, validated_data):
+        # set the thumbnail field:
+        validated_data['image'] = self.context.get("image")
+        pet_image = PetImage.objects.create(**validated_data)
+        return pet_image
+
+
+class PetSerializer(serializers.ModelSerializer):
     """
     Serializer for pet model (without pledges).
     """
     id = serializers.ReadOnlyField()
     title = serializers.CharField(max_length=100)
     pet_name = serializers.CharField(max_length=100)
+    image = serializers.ImageField()
     description = serializers.CharField()
     med_treatment = serializers.CharField()
     date_created = serializers.DateTimeField(read_only=True)
     goal = serializers.IntegerField()
-    pledged_amount = serializers.SerializerMethodField()
+    pledged_amount = serializers.SerializerMethodField(default=0)
     goal_reached = serializers.BooleanField(default=False)
     active = serializers.BooleanField(default=True)
     owner = serializers.ReadOnlyField(source='owner.username')
     pet_category = serializers.SlugRelatedField(slug_field='category', queryset=Category.objects.all())
 
 
-    # Added this meta class because of: https://www.django-rest-framework.org/api-guide/fields/#date-and-time-fields
     class Meta:
         model = Pet
+        fields = ('id', 'title', 'pet_name', 'image', 'description', 'med_treatment', 'date_created', 'goal', 'pledged_amount', 'goal_reached', 'active', 'owner', 'pet_category')
 
     def get_pledged_amount(self, obj):
         pledged = 0
@@ -80,6 +122,7 @@ class PetSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
         instance.pet_name = validated_data.get('pet_name', instance.pet_name)
+        instance.image = validated_data.get('image', instance.image)
         instance.description = validated_data.get('description', instance.description)
         instance.goal = validated_data.get('goal', instance.goal)
         instance.active = validated_data.get('active', instance.active)
@@ -94,4 +137,3 @@ class PetDetailSerializer(PetSerializer):
     Serializer for pet model (with pledges).
     """
     pledges = PledgeSerializer(many=True, read_only=True)
-
