@@ -3,14 +3,18 @@ from rest_framework import serializers
 from .models import CustomUser, UserProfile
 
 
-class UserProfileSerializer(serializers.Serializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for user profile endpoint.
     """
     id = serializers.ReadOnlyField()
-    profile_img = serializers.ImageField(allow_empty_file=True, use_url=True)
+    profile_img = serializers.ImageField()
     fun_fact = serializers.CharField(max_length=200)
     user = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = UserProfile
+        fields = ('id', 'profile_img', 'fun_fact', 'user')
 
     def create(self, validated_data):
         return UserProfile.objects.create(**validated_data)

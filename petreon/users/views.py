@@ -120,9 +120,8 @@ class UserProfileDetail(APIView):
     """
     View for profile detail endpoint.
     """
-
     permission_classes = [IsUserOrReadOnly,]
-    parser_classes = [MultiPartParser,]
+    parser_classes = (MultiPartParser,)
     serializer_class = UserProfileSerializer
 
     def get_object(self, pk):
