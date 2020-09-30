@@ -6,8 +6,10 @@ from rest_framework import status, generics, permissions
 from rest_framework.parsers import MultiPartParser
 
 from .models import CustomUser, UserProfile
-from .serializers import CustomUserSerializer, ChangePasswordSerializer, UserProfileSerializer
+from .serializers import CustomUserSerializer, ChangePasswordSerializer, UserProfileSerializer, UserPetSerializer
 from .permissions import IsUserOrReadOnly, IsSuperUser
+from pets.models import Pet
+from pets.serializers import PetSerializer
 
 
 class CustomUserCreate(generics.CreateAPIView):
@@ -82,26 +84,26 @@ class CustomUserDetail(APIView):
     View for user account detail endpoint.
     """
 
-    permission_classes = [IsUserOrReadOnly]
+    # permission_classes = [IsUserOrReadOnly]
 
-    def get_object(self, pk):
+    def get_object(self, username):
         try:
-            user = CustomUser.objects.get(pk=pk)
+            user = CustomUser.objects.get(username=username)
             self.check_object_permissions(self.request, user)
             return user
         except CustomUser.DoesNotExist:
             raise Http404
 
-    def get(self, request, pk):
-        user = self.get_object(pk)
+    def get(self, request, username):
+        user = self.get_object(username)
         serializer = CustomUserSerializer(user)
         return Response(serializer.data)
 
-    def put(self, request, pk):
-        user = self.get_object(pk)
+    def put(self, request, username):
+        user = self.get_object(username)
         serializer = CustomUserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save(username=self.get_object(pk))
+            serializer.save(username=self.get_object(username))
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
@@ -111,8 +113,8 @@ class CustomUserDetail(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    def delete(self, request, pk):
-        user = self.get_object(pk)
+    def delete(self, request, username):
+        user = self.get_object(username)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT) 
 
@@ -120,25 +122,25 @@ class UserProfileDetail(APIView):
     """
     View for profile detail endpoint.
     """
-    permission_classes = [IsUserOrReadOnly,]
+    # permission_classes = [IsUserOrReadOnly,]
     parser_classes = (MultiPartParser,)
     serializer_class = UserProfileSerializer
 
-    def get_object(self, pk):
+    def get_object(self, username):
         try:
-            profile = UserProfile.objects.get(pk=pk)
+            profile = UserProfile.objects.select_related('user').get(user__username=username)
             self.check_object_permissions(self.request, profile)
             return profile
         except UserProfile.DoesNotExist():
             raise Http404
 
-    def get(self, request, pk):
-        profile = self.get_object(pk)
+    def get(self, request, username):
+        profile = self.get_object(username=username)
         serializer = UserProfileSerializer(profile)
         return Response(serializer.data)
 
-    def put(self, request, pk):
-        profile = self.get_object(pk)
+    def put(self, request, username):
+        profile = self.get_object(username)
         serializer = UserProfileSerializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save(user=request.user)
@@ -151,7 +153,27 @@ class UserProfileDetail(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    def delete(self, request, pk):
-        profile = self.get_object(pk)
+    def delete(self, request, username):
+        profile = self.get_object(username)
         profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT) 
+
+
+class UserPetList(APIView):
+    """
+    View for pet list endpoint (of specific user).
+    """
+
+    def get_object(self, username):
+        try:
+            user = CustomUser.objects.get(username=username)
+            self.check_object_permissions(self.request, user)
+            return user
+        except CustomUser.DoesNotExist:
+            raise Http404
+
+    def get(self, request, username):
+        pets = Pet.objects.all().filter(owner=self.get_object(username))
+        serializer = PetSerializer(pets, many=True)
+        return Response(serializer.data)
+

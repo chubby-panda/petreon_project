@@ -54,6 +54,26 @@ class PetList(generics.ListAPIView):
         )
 
 
+# class UserPetList(generics.ListAPIView):
+#     serializer_class = PetSerializer
+#     permission_classes = [
+#         permissions.IsAuthenticatedOrReadOnly,
+#         ]
+#     # filterset_fields = ['user',]
+
+#     def get_queryset(self):
+#         queryset = Pet.objects.all().filter(owner=self.kwargs['owner'])
+#         category = self.request.query_params.get('pet_category', None)
+#         if category is not None:
+#             queryset = queryset.filter(pet_category__category=category)
+#         return queryset
+
+#     def get(self, request):
+#         pets = self.get_queryset()
+#         serializer = PetSerializer(pets, many=True)
+#         return Response(serializer.data)
+
+
 class PetDetail(APIView):
     """
     View for pet detail endpoint (view one pet).
@@ -105,7 +125,7 @@ class PetPledgeList(APIView):
             self.check_object_permissions(self.request, pet)
             return pet
         except Pet.DoesNotExist:
-            raise Http404
+            raise Http404 
 
     def get(self, request, pet_pk):
         pledges = Pledge.objects.all().filter(pet=self.get_object(pet_pk))

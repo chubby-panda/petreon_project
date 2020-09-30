@@ -1,6 +1,13 @@
 from rest_framework import serializers
 
 from .models import CustomUser, UserProfile
+from pets.models import Pet
+
+
+class UserPetSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = Pet
+        fields = "__all__"
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -11,10 +18,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     profile_img = serializers.ImageField()
     fun_fact = serializers.CharField(max_length=200)
     user = serializers.ReadOnlyField(source='user.username')
+    username = serializers.ReadOnlyField(source='user.username')
+    pets = UserPetSerializer(many=True, read_only=True)
 
     class Meta:
         model = UserProfile
-        fields = ('id', 'profile_img', 'fun_fact', 'user')
+        fields = ('id', 'profile_img', 'fun_fact', 'user', 'username', 'pets')
 
     def create(self, validated_data):
         return UserProfile.objects.create(**validated_data)
