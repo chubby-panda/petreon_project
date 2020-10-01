@@ -6,7 +6,7 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.renderers import JSONRenderer
 import io
 
@@ -19,7 +19,7 @@ class PetList(generics.ListAPIView):
     """
     View for pet list endpoint.
     """
-    parser_classes = (MultiPartParser,)
+    parser_classes = (MultiPartParser, FormParser)
     serializer_class = PetSerializer
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
@@ -52,26 +52,6 @@ class PetList(generics.ListAPIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-
-
-# class UserPetList(generics.ListAPIView):
-#     serializer_class = PetSerializer
-#     permission_classes = [
-#         permissions.IsAuthenticatedOrReadOnly,
-#         ]
-#     # filterset_fields = ['user',]
-
-#     def get_queryset(self):
-#         queryset = Pet.objects.all().filter(owner=self.kwargs['owner'])
-#         category = self.request.query_params.get('pet_category', None)
-#         if category is not None:
-#             queryset = queryset.filter(pet_category__category=category)
-#         return queryset
-
-#     def get(self, request):
-#         pets = self.get_queryset()
-#         serializer = PetSerializer(pets, many=True)
-#         return Response(serializer.data)
 
 
 class PetDetail(APIView):
