@@ -1,6 +1,8 @@
+import os
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
+from django.utils.timezone import now
 
 from notifications.models import Notification
 
@@ -29,11 +31,11 @@ class Pet(models.Model):
     """
     Model for pets/projects.
     """
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, unique=True)
     pet_name = models.CharField(max_length=100)
-    image = models.ImageField(upload_to='media/', default='media/default.jpg')
     description = models.TextField()
-    med_treatment = models.CharField(max_length=100, verbose_name="medical treatment")
+    med_treatment = models.CharField(
+        max_length=100, verbose_name="medical treatment")
     date_created = models.DateTimeField(auto_now_add=True)
     goal = models.IntegerField()
     pledged_amount = models.IntegerField(default=0)
@@ -46,12 +48,12 @@ class Pet(models.Model):
     )
     pet_category = models.ForeignKey(
         Category,
-        on_delete=models.SET(get_generic_category), 
+        on_delete=models.SET(get_generic_category),
         related_name='pets'
     )
 
     class Meta:
-        ordering = ['-date_created',]
+        ordering = ['-date_created', ]
 
     def __str__(self):
         return self.title
@@ -59,17 +61,26 @@ class Pet(models.Model):
 
 class PetImage(models.Model):
     """
-    Model for pet images. Separate model created so that multiple images can be uploaded for each pet instance. 
+    Model for pet image. Images to be stored in Amazon S3.
     """
-    image = models.ImageField(upload_to='images/', max_length=254)
+    def upload_image_to(instance, filename):
+        filename_base, filename_ext = os.path.splitext(filename)
+        return 'posts/%s/%s' % (
+            now().strftime("%Y%m%d"),
+            instance.id
+        )
+
+    image = models.ImageField(
+        upload_to=upload_image_to, editable=True, null=True, blank=True)
     pet = models.ForeignKey(
         Pet,
         on_delete=models.CASCADE,
         related_name='images'
     )
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
-    def __str__(self):
-        return self.image.name
+    class Meta:
+        db_table = 'Pet'
 
 
 class Pledge(models.Model):
@@ -105,13 +116,14 @@ def get_pledge_update(sender, instance, **kwargs):
             title=f"Your pet {instance.pet.pet_name} has received a pledge.",
             body=f"{s} has pledged ${instance.amount} to your pet, {instance.pet.pet_name}.",
             recipient=instance.pet.owner
-            )
+        )
     elif kwargs['created'] is False:
         Notification.objects.create(
             title=f"{s} updated their pledge for {instance.pet.pet_name}.",
             body=f"{s} has changed their original pledge for {instance.pet.pet_name}'s treatment to ${instance.amount}.",
             recipient=instance.pet.owner
         )
+
 
 post_save.connect(get_pledge_update, sender=Pledge)
 
@@ -131,5 +143,6 @@ def get_total_pledge(sender, instance, **kwargs):
             )
             instance.pet.active = False
         instance.pet.save()
+
 
 post_save.connect(get_total_pledge, sender=Pledge)

@@ -35,50 +35,45 @@ class PledgeSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         instance.amount = validated_data.get('amount', instance.amount)
-        instance.anonymous = validated_data.get('anonymous', instance.anonymous)
-        instance.supporter = validated_data.get('supporter', instance.supporter)
+        instance.anonymous = validated_data.get(
+            'anonymous', instance.anonymous)
+        instance.supporter = validated_data.get(
+            'supporter', instance.supporter)
         instance.save()
         return instance
 
 
-class ConstrainedImageField(serializers.ImageField):
-    """
-    ImageField with additional constraints (size)
-    """
-    MAX_SIZE = 2000000  # in Bytes
-    default_error_messages = {
-        'image_size': _('The size of the image is {image_size} KB. The maximum size allowed is: {max_size} KB.'),
-    }
+# class ConstrainedImageField(serializers.ImageField):
+#     """
+#     ImageField with additional constraints (size)
+#     """
+#     MAX_SIZE = 2000000  # in Bytes
+#     default_error_messages = {
+#         'image_size': _('The size of the image is {image_size} KB. The maximum size allowed is: {max_size} KB.'),
+#     }
 
-    def to_internal_value(self, data):
-        super(ConstrainedImageField, self).to_internal_value(data=data)
-        file_size = data.size
-        if file_size > self.MAX_SIZE:
-            max_size_kb = self.MAX_SIZE/1000
-            file_size_kb = file_size/1000
-            self.fail('image_size', max_size=max_size_kb, image_size=file_size_kb)
+#     def to_internal_value(self, data):
+#         super(ConstrainedImageField, self).to_internal_value(data=data)
+#         file_size = data.size
+#         if file_size > self.MAX_SIZE:
+#             max_size_kb = self.MAX_SIZE/1000
+#             file_size_kb = file_size/1000
+#             self.fail('image_size', max_size=max_size_kb, image_size=file_size_kb)
 
 
 class PetImageSerializer(serializers.ModelSerializer):
     """
     Serializer for pet image model (included in PetSerializer)
     """
-    image = ConstrainedImageField(max_length=254, use_url=True, allow_empty_file=False)
+    id = serializers.ReadOnlyField()
+    pet = serializers.ReadOnlyField(source='pet.title')
 
     class Meta:
         model = PetImage
-        fields = "__all__"
-
-    def validate(self, data):
-        # get the image data from request.FILES:
-        self.context["image"] = self.context['request'].FILES.get("image")
-        return data
+        fields = ('id', 'image', 'pet', 'created_at')
 
     def create(self, validated_data):
-        # set the thumbnail field:
-        validated_data['image'] = self.context.get("image")
-        pet_image = PetImage.objects.create(**validated_data)
-        return pet_image
+        return PetImage.objects.create(**validated_data)
 
 
 class PetSerializer(serializers.ModelSerializer):
@@ -88,7 +83,6 @@ class PetSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
     title = serializers.CharField(max_length=100)
     pet_name = serializers.CharField(max_length=100)
-    image = serializers.ImageField()
     description = serializers.CharField()
     med_treatment = serializers.CharField()
     date_created = serializers.DateTimeField(read_only=True)
@@ -97,12 +91,13 @@ class PetSerializer(serializers.ModelSerializer):
     goal_reached = serializers.BooleanField(default=False)
     active = serializers.BooleanField(default=True)
     owner = serializers.ReadOnlyField(source='owner.username')
-    pet_category = serializers.SlugRelatedField(slug_field='category', queryset=Category.objects.all())
-
+    pet_category = serializers.SlugRelatedField(
+        slug_field='category', queryset=Category.objects.all())
 
     class Meta:
         model = Pet
-        fields = ('id', 'title', 'pet_name', 'image', 'description', 'med_treatment', 'date_created', 'goal', 'pledged_amount', 'goal_reached', 'active', 'owner', 'pet_category')
+        fields = ('id', 'title', 'pet_name', 'description', 'med_treatment', 'date_created',
+                  'goal', 'pledged_amount', 'goal_reached', 'active', 'owner', 'pet_category')
 
     def get_pledged_amount(self, obj):
         pledged = 0
@@ -123,11 +118,13 @@ class PetSerializer(serializers.ModelSerializer):
         instance.title = validated_data.get('title', instance.title)
         instance.pet_name = validated_data.get('pet_name', instance.pet_name)
         instance.image = validated_data.get('image', instance.image)
-        instance.description = validated_data.get('description', instance.description)
+        instance.description = validated_data.get(
+            'description', instance.description)
         instance.goal = validated_data.get('goal', instance.goal)
         instance.active = validated_data.get('active', instance.active)
         instance.owner = validated_data.get('owner', instance.owner)
-        instance.pet_category = validated_data.get('pet_category', instance.pet_category)
+        instance.pet_category = validated_data.get(
+            'pet_category', instance.pet_category)
         instance.save()
         return instance
 
