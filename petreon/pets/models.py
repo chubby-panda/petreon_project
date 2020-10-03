@@ -1,4 +1,5 @@
 import os
+import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
@@ -64,10 +65,13 @@ class PetImage(models.Model):
     Model for pet image. Images to be stored in Amazon S3.
     """
     def upload_image_to(instance, filename):
+        print(filename)
         filename_base, filename_ext = os.path.splitext(filename)
+        print(os.path.splitext(filename))
+        u = uuid.uuid4()
         return 'posts/%s/%s' % (
             now().strftime("%Y%m%d"),
-            instance.id
+            u.hex
         )
 
     image = models.ImageField(

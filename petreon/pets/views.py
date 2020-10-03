@@ -116,7 +116,10 @@ class PetImageList(APIView):
         return Response(serializer.data)
 
     def post(self, request, pet_pk):
-        serializer = PetImageSerializer(data=request.FILES)
+        print("I am here!")
+        
+        serializer = PetImageSerializer(data=request.data)
+        print(f"Data: {request.data}")
         if serializer.is_valid():
             serializer.save(pet=self.get_object(pet_pk))
             return Response(
