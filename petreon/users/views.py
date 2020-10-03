@@ -18,7 +18,7 @@ class CustomUserCreate(generics.CreateAPIView):
     """
 
     queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
+    serializer_class = CustomUserSerializer 
 
     def check_permissions(self, request):
         if request.user.is_authenticated:
