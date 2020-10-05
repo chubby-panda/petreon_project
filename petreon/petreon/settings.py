@@ -31,6 +31,8 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
 ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_PREFLIGHT_MAX_AGE = 0
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -45,7 +47,6 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
-
 
 
 # Application definition
@@ -165,9 +166,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 # AWS S3 Configuration
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+# AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_ACCESS_KEY_ID = 'AKIA53OGKOB4HA7X2GXO'
+# AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_SECRET_ACCESS_KEY = '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'
+# AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_STORAGE_BUCKET_NAME = 'petreon-assets'
 
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 

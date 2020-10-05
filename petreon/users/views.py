@@ -3,11 +3,11 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import CustomUser, UserProfile
 from .serializers import CustomUserSerializer, ChangePasswordSerializer, UserProfileSerializer, UserPetSerializer
-from .permissions import IsUserOrReadOnly, IsSuperUser
+from .permissions import IsUserOrReadOnly, IsSuperUser, IsProfileUserOrReadOnly
 from pets.models import Pet
 from pets.serializers import PetSerializer
 
@@ -18,7 +18,7 @@ class CustomUserCreate(generics.CreateAPIView):
     """
 
     queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer 
+    serializer_class = CustomUserSerializer
 
     def check_permissions(self, request):
         if request.user.is_authenticated:
@@ -84,7 +84,7 @@ class CustomUserDetail(APIView):
     View for user account detail endpoint.
     """
 
-    # permission_classes = [IsUserOrReadOnly]
+    permission_classes = [IsUserOrReadOnly]
 
     def get_object(self, username):
         try:
@@ -101,7 +101,8 @@ class CustomUserDetail(APIView):
 
     def put(self, request, username):
         user = self.get_object(username)
-        serializer = CustomUserSerializer(user, data=request.data, partial=True)
+        serializer = CustomUserSerializer(
+            user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save(username=self.get_object(username))
             return Response(
@@ -116,19 +117,21 @@ class CustomUserDetail(APIView):
     def delete(self, request, username):
         user = self.get_object(username)
         user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT) 
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class UserProfileDetail(APIView):
     """
     View for profile detail endpoint.
     """
-    # permission_classes = [IsUserOrReadOnly,]
-    parser_classes = (MultiPartParser,)
+    permission_classes = [IsProfileUserOrReadOnly, ]
+    parser_classes = (MultiPartParser, FormParser)
     serializer_class = UserProfileSerializer
 
     def get_object(self, username):
         try:
-            profile = UserProfile.objects.select_related('user').get(user__username=username)
+            profile = UserProfile.objects.select_related(
+                'user').get(user__username=username)
             self.check_object_permissions(self.request, profile)
             return profile
         except UserProfile.DoesNotExist():
@@ -141,7 +144,8 @@ class UserProfileDetail(APIView):
 
     def put(self, request, username):
         profile = self.get_object(username)
-        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        serializer = UserProfileSerializer(
+            profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(
@@ -156,7 +160,7 @@ class UserProfileDetail(APIView):
     def delete(self, request, username):
         profile = self.get_object(username)
         profile.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT) 
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserPetList(APIView):
@@ -176,4 +180,3 @@ class UserPetList(APIView):
         pets = Pet.objects.all().filter(owner=self.get_object(username))
         serializer = PetSerializer(pets, many=True)
         return Response(serializer.data)
-

@@ -117,7 +117,6 @@ class PetSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
         instance.pet_name = validated_data.get('pet_name', instance.pet_name)
-        instance.image = validated_data.get('image', instance.image)
         instance.description = validated_data.get(
             'description', instance.description)
         instance.goal = validated_data.get('goal', instance.goal)
@@ -134,3 +133,4 @@ class PetDetailSerializer(PetSerializer):
     Serializer for pet model (with pledges).
     """
     pledges = PledgeSerializer(many=True, read_only=True)
+    images = PetImageSerializer(many=True, read_only=True)

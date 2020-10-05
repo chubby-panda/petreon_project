@@ -19,7 +19,6 @@ class PetList(generics.ListAPIView):
     """
     View for pet list endpoint.
     """
-    parser_classes = (MultiPartParser, FormParser)
     serializer_class = PetSerializer
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
@@ -117,7 +116,7 @@ class PetImageList(APIView):
 
     def post(self, request, pet_pk):
         print("I am here!")
-        
+
         serializer = PetImageSerializer(data=request.data)
         print(f"Data: {request.data}")
         if serializer.is_valid():
