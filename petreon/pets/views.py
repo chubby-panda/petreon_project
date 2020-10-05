@@ -129,44 +129,41 @@ class PetImageList(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-    # def perform_create(self, serializer):
-    #     serializer.save(pet_pk=self.kwargs['pet_pk'])
 
-# class PetImageDetail(APIView)
 
-#     # permission_classes = [IsSupporterOrReadOnly, ]
+class PetImageDetail(APIView):
 
-#     def get_object(self, image_pk):
-#         try:
-#             image = PetImage.objects.get(pk=image_pk)
-#             self.check_object_permissions(self.request, image)
-#             return image
-#         except PetImage.DoesNotExist:
-#             raise Http404
+    def get_object(self, image_pk):
+        try:
+            image = PetImage.objects.get(pk=image_pk)
+            self.check_object_permissions(self.request, image)
+            return image
+        except PetImage.DoesNotExist:
+            raise Http404
 
-#     def get(self, request, pet_pk, image_pk):
-#         image = self.get_object(image_pk)
-#         serializer = PetImageSerializer(image)
-#         return Response(serializer.data)
+    def get(self, request, pet_pk, image_pk):
+        image = self.get_object(image_pk)
+        serializer = PetImageSerializer(image)
+        return Response(serializer.data)
 
-#     def put(self, request, pet_pk, image_pk):
-#         image = self.get_object(image_pk)
-#         serializer = PetImageSerializer(image, data=request.files, partial=True)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(
-#                 serializer.data,
-#                 status=status.HTTP_200_OK
-#             )
-#         return Response(
-#             serializer.errors,
-#             status=status.HTTP_400_BAD_REQUEST
-#         )
+    def put(self, request, pet_pk, image_pk):
+        image = self.get_object(image_pk)
+        serializer = PetImageSerializer(image, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-#     def delete(self, request, pet_pk, image_pk):
-#         image = self.get_object(image_pk)
-#         image.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+    def delete(self, request, pet_pk, image_pk):
+        image = self.get_object(image_pk)
+        image.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PetPledgeList(APIView):
