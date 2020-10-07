@@ -39,6 +39,7 @@ CORS_ALLOW_HEADERS = [
     'accept-encoding',
     'accept-language',
     'authorization',
+    'content-disposition',
     'content-type',
     'content-length',
     'dnt',
@@ -82,7 +83,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'petreon.middleware.CorsMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -169,6 +171,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+
 
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_REGION_NAME = 'us-east-2'

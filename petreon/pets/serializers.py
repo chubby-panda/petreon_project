@@ -73,6 +73,7 @@ class PetImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'image', 'pet', 'created_at')
 
     def create(self, validated_data):
+        print('PetImageSerializer', validated_data)
         return PetImage.objects.create(**validated_data)
 
 

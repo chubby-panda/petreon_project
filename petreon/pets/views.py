@@ -6,7 +6,7 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
 from rest_framework.renderers import JSONRenderer
 import io
 
@@ -99,7 +99,7 @@ class PetImageList(APIView):
     queryset = PetImage.objects.all()
     serializer_class = PetImageSerializer
     # permission_classes = (IsPetOwnerOrReadOnly,)
-    parser_classes = (MultiPartParser,)
+    parser_classes = (FileUploadParser,)
 
     def get_object(self, pet_pk):
         try:
@@ -117,7 +117,7 @@ class PetImageList(APIView):
     def post(self, request, pet_pk):
         print("I am here!")
 
-        serializer = PetImageSerializer(data=request.data)
+        serializer = PetImageSerializer(data={'image': request.data['file']})
         print(f"Data: {request.data}")
         if serializer.is_valid():
             serializer.save(pet=self.get_object(pet_pk))
