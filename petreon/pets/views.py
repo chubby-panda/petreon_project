@@ -132,6 +132,8 @@ class PetImageList(APIView):
 
 
 class PetImageDetail(APIView):
+    parser_classes = (FileUploadParser,)
+    serializer_class = PetImageSerializer
 
     def get_object(self, image_pk):
         try:
@@ -148,7 +150,8 @@ class PetImageDetail(APIView):
 
     def put(self, request, pet_pk, image_pk):
         image = self.get_object(image_pk)
-        serializer = PetImageSerializer(image, data=request.data, partial=True)
+        serializer = PetImageSerializer(
+            image, data={'image': request.data['file']})
         if serializer.is_valid():
             serializer.save()
             return Response(
