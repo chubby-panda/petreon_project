@@ -76,6 +76,11 @@ class PetImageSerializer(serializers.ModelSerializer):
         print('PetImageSerializer', validated_data)
         return PetImage.objects.create(**validated_data)
 
+    def update(self, instance, validated_data):
+        instance.image = validated_data.get('image', instance.image)
+        instance.save()
+        return instance
+
 
 class PetSerializer(serializers.ModelSerializer):
     """
