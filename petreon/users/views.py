@@ -33,8 +33,8 @@ class ChangePasswordView(generics.UpdateAPIView):
     model = CustomUser
     permission_classes = (IsUserOrReadOnly,)
 
-    def get_object(self, queryset=None):
-        user = self.request.user
+    def get_object(self, username):
+        user = CustomUser.objects.get(username=username)
         self.check_object_permissions(self.request, user)
         return user
 

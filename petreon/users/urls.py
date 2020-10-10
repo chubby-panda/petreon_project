@@ -13,7 +13,7 @@ urlpatterns = [
     path('users/profile/<str:username>/image/',
          views.EditProfileImageView.as_view()),  # Edit profile image
     path('users/<str:username>/pets/', views.UserPetList.as_view()),
-    path('users/account/<int:pk>/change-password/',
+    path('users/account/<str:username>/change-password/',
          views.ChangePasswordView.as_view()),  # Change password
 ]
 
