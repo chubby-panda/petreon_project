@@ -10,6 +10,8 @@ urlpatterns = [
          views.CustomUserDetail.as_view()),  # View account
     path('users/profile/<str:username>/',
          views.UserProfileDetail.as_view()),  # View profile
+    path('users/profile/<str:username>/image/',
+         views.EditProfileImageView.as_view()),  # Edit profile image
     path('users/<str:username>/pets/', views.UserPetList.as_view()),
     path('users/account/<int:pk>/change-password/',
          views.ChangePasswordView.as_view()),  # Change password

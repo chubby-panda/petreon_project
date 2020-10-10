@@ -5,7 +5,7 @@ from pets.models import Pet
 
 
 class UserPetSerializer(serializers.ModelSerializer):
-    class Meta: 
+    class Meta:
         model = Pet
         fields = "__all__"
 
@@ -15,7 +15,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     Serializer for user profile endpoint.
     """
     id = serializers.ReadOnlyField()
-    profile_img = serializers.ImageField()
+    profile_img = serializers.ImageField(read_only=True)
     fun_fact = serializers.CharField(max_length=200)
     user = serializers.ReadOnlyField(source='user.username')
     username = serializers.ReadOnlyField(source='user.username')
@@ -29,8 +29,29 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return UserProfile.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        instance.profile_img = validated_data.get('profile_img', instance.profile_img)
         instance.fun_fact = validated_data.get('fun_fact', instance.fun_fact)
+        instance.save()
+        return instance
+
+
+class ProfileImageSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating user profile image
+    """
+    id = serializers.ReadOnlyField()
+    fun_fact = serializers.CharField(read_only=True)
+    user = serializers.ReadOnlyField(source='user.username')
+    username = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = UserProfile
+        fields = ('id', 'user', 'fun_fact', 'profile_img', 'user', 'username')
+
+    def update(self, instance, validated_data):
+        print("VALIDATED DATA:", validated_data)
+        print("INSTANCE:", instance)
+        instance.profile_img = validated_data.get(
+            'profile_img', instance.profile_img)
         instance.save()
         return instance
 
@@ -64,4 +85,3 @@ class ChangePasswordSerializer(serializers.Serializer):
     """
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
-

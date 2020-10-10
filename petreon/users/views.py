@@ -3,10 +3,10 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
 
 from .models import CustomUser, UserProfile
-from .serializers import CustomUserSerializer, ChangePasswordSerializer, UserProfileSerializer, UserPetSerializer
+from .serializers import CustomUserSerializer, ChangePasswordSerializer, UserProfileSerializer, UserPetSerializer, ProfileImageSerializer
 from .permissions import IsUserOrReadOnly, IsSuperUser, IsProfileUserOrReadOnly
 from pets.models import Pet
 from pets.serializers import PetSerializer
@@ -161,6 +161,45 @@ class UserProfileDetail(APIView):
         profile = self.get_object(username)
         profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class EditProfileImageView(APIView):
+    """
+    View to update profile image
+    """
+    # permission_classes = [IsProfileUserOrReadOnly, ]
+    parser_classes = [FileUploadParser, ]
+    serializer_class = ProfileImageSerializer
+
+    def get_object(self, username):
+        try:
+            profile = UserProfile.objects.select_related(
+                'user').get(user__username=username)
+            self.check_object_permissions(self.request, profile)
+            return profile
+        except UserProfile.DoesNotExist():
+            raise Http404
+
+    def get(self, request, username):
+        profile = self.get_object(username=username)
+        serializer = ProfileImageSerializer(profile)
+        return Response(serializer.data)
+
+    def put(self, request, username):
+        print("REQUEST:", request.data['file'])
+        profile = self.get_object(username)
+        serializer = ProfileImageSerializer(
+            profile, data={'image': request.data['file']})
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class UserPetList(APIView):
